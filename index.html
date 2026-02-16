@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>نظام الجلاء الرياضي Pro</title>
+    <title>برنامج الجلاء الرياضي Pro</title>
     
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#4338ca" />
@@ -16,7 +16,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <style>
       :root {
-        --sidebar-width: 260px;
+        --sidebar-width: 280px;
       }
       body {
         font-family: 'Tajawal', sans-serif;
@@ -25,12 +25,13 @@
         background-color: #f8fafc;
         height: 100vh;
         width: 100vw;
+        -webkit-font-smoothing: antialiased;
       }
       * {
         -webkit-tap-highlight-color: transparent;
       }
       .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
+        width: 5px;
       }
       .custom-scrollbar::-webkit-scrollbar-track {
         background: transparent;
@@ -43,7 +44,6 @@
         .no-print { display: none !important; }
       }
       
-      /* واجهة تحميل بسيطة تظهر قبل تشغيل React */
       #loading-screen {
         position: fixed;
         inset: 0;
@@ -56,12 +56,13 @@
         transition: opacity 0.5s ease;
       }
       .spinner {
-        width: 50px;
-        height: 50px;
-        border: 5px solid #f3f3f3;
-        border-top: 5px solid #4338ca;
+        width: 60px;
+        height: 60px;
+        border: 4px solid #f1f5f9;
+        border-top: 4px solid #4338ca;
         border-radius: 50%;
-        animation: spin 1s linear infinite;
+        animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        box-shadow: 0 10px 30px rgba(67, 56, 202, 0.1);
       }
       @keyframes spin {
         0% { transform: rotate(0deg); }
@@ -77,38 +78,38 @@
         "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
         "@google/genai": "https://esm.sh/@google/genai@1.3.0",
         "recharts": "https://esm.sh/recharts@2.15.0?deps=react@19.0.0,react-dom@19.0.0",
-        "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
+        "react-dom/": "https://esm.sh/react-dom@19.0.0/",
+        "xlsx": "https://esm.sh/xlsx@0.18.5"
       }
     }
     </script>
   </head>
   <body>
-    <!-- واجهة التحميل -->
     <div id="loading-screen">
       <div class="spinner"></div>
-      <p style="margin-top: 20px; color: #4338ca; font-weight: bold;">جاري تشغيل نظام الجلاء...</p>
+      <p style="margin-top: 24px; color: #1e293b; font-weight: 900; font-size: 1.2rem; letter-spacing: -0.02em;">جيم الجلاء الرياضي</p>
+      <p style="margin-top: 8px; color: #64748b; font-weight: 500; font-size: 0.8rem;">جاري تهيئة بيئة العمل...</p>
     </div>
 
     <div id="root"></div>
 
-    <!-- السطر الأهم: تشغيل التطبيق -->
     <script type="module" src="index.tsx"></script>
 
     <script>
-      // إخفاء واجهة التحميل بمجرد تحميل الصفحة بالكامل
       window.addEventListener('load', () => {
         setTimeout(() => {
           const loader = document.getElementById('loading-screen');
-          if (loader) loader.style.opacity = '0';
-          setTimeout(() => loader?.remove(), 500);
-        }, 300);
+          if (loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => loader.remove(), 500);
+          }
+        }, 800);
       });
 
-      // تسجيل الـ Service Worker
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('✅ PWA Active'))
+            .then(reg => console.log('✅ Desktop Environment Ready'))
             .catch(err => console.log('❌ PWA Error', err));
         });
       }
