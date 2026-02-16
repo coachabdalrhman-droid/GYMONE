@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>نظام الجلاء الرياضي Pro</title>
+    
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#4338ca" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --sidebar-width: 260px;
+      }
+      body {
+        font-family: 'Tajawal', sans-serif;
+        overflow: hidden;
+        user-select: none;
+        background-color: #f8fafc;
+        height: 100vh;
+        width: 100vw;
+      }
+      * {
+        -webkit-tap-highlight-color: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+      }
+      @media print {
+        .no-print { display: none !important; }
+      }
+    </style>
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@19.0.0",
+        "react/": "https://esm.sh/react@19.0.0/",
+        "react-dom": "https://esm.sh/react-dom@19.0.0",
+        "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+        "@google/genai": "https://esm.sh/@google/genai@1.3.0",
+        "recharts": "https://esm.sh/recharts@2.15.0?deps=react@19.0.0,react-dom@19.0.0",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
+      }
+    }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      // تسجيل الـ Service Worker بطريقة احترافية تتجنب أخطاء النشر
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          // استخدام مسار نظيف لضمان عدم تعارض الـ Origin
+          const swPath = 'sw.js';
+          navigator.serviceWorker.register(swPath)
+            .then(reg => {
+              console.log('✅ Gym Jalaa PWA: Ready at scope:', reg.scope);
+              
+              // التحقق من وجود تحديثات
+              reg.onupdatefound = () => {
+                const installingWorker = reg.installing;
+                if (installingWorker) {
+                  installingWorker.onstatechange = () => {
+                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                      console.log('🔄 New update available! Please refresh.');
+                    }
+                  };
+                }
+              };
+            })
+            .catch(err => {
+              // إذا كان الخطأ متعلق بـ Origin في بيئة تطوير معينة، نقوم بتجاهله أو تسجيله بهدوء
+              if (err.message.includes('same-origin')) {
+                console.warn('⚠️ Service Worker skipped: Same-origin policy (Local environment).');
+              } else {
+                console.error('❌ SW Registration Failed:', err);
+              }
+            });
+        });
+      }
+    </script>
+  </body>
+</html>
