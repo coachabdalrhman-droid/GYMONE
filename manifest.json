@@ -1,8 +1,8 @@
 
 {
   "short_name": "جيم الجلاء",
-  "name": "جيم الجلاء الرياضي - نسخة سطح المكتب",
-  "description": "نظام احترافي لإدارة اشتراكات وأعضاء جيم الجلاء الرياضي",
+  "name": "نظام إدارة جيم الجلاء الرياضي",
+  "description": "نظام احترافي لإدارة اشتراكات وأعضاء جيم الجلاء الرياضي - غزة",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2964/2964514.png",
@@ -25,16 +25,11 @@
   ],
   "start_url": "./index.html",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone"],
-  "orientation": "any",
-  "theme_color": "#4338ca",
   "background_color": "#ffffff",
-  "categories": ["business", "fitness", "productivity"],
-  "shortcuts": [
-    {
-      "name": "سجل الأعضاء",
-      "url": "./index.html#members",
-      "icons": [{ "src": "https://cdn-icons-png.flaticon.com/512/2964/2964514.png", "sizes": "192x192" }]
-    }
-  ]
+  "theme_color": "#4338ca",
+  "orientation": "portrait",
+  "scope": "./",
+  "lang": "ar-SA",
+  "dir": "rtl",
+  "categories": ["fitness", "business"]
 }

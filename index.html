@@ -42,6 +42,31 @@
       @media print {
         .no-print { display: none !important; }
       }
+      
+      /* واجهة تحميل بسيطة تظهر قبل تشغيل React */
+      #loading-screen {
+        position: fixed;
+        inset: 0;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease;
+      }
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #4338ca;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
     </style>
     <script type="importmap">
     {
@@ -58,37 +83,33 @@
     </script>
   </head>
   <body>
+    <!-- واجهة التحميل -->
+    <div id="loading-screen">
+      <div class="spinner"></div>
+      <p style="margin-top: 20px; color: #4338ca; font-weight: bold;">جاري تشغيل نظام الجلاء...</p>
+    </div>
+
     <div id="root"></div>
+
+    <!-- السطر الأهم: تشغيل التطبيق -->
+    <script type="module" src="index.tsx"></script>
+
     <script>
-      // تسجيل الـ Service Worker بطريقة احترافية تتجنب أخطاء النشر
+      // إخفاء واجهة التحميل بمجرد تحميل الصفحة بالكامل
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const loader = document.getElementById('loading-screen');
+          if (loader) loader.style.opacity = '0';
+          setTimeout(() => loader?.remove(), 500);
+        }, 300);
+      });
+
+      // تسجيل الـ Service Worker
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          // استخدام مسار نظيف لضمان عدم تعارض الـ Origin
-          const swPath = 'sw.js';
-          navigator.serviceWorker.register(swPath)
-            .then(reg => {
-              console.log('✅ Gym Jalaa PWA: Ready at scope:', reg.scope);
-              
-              // التحقق من وجود تحديثات
-              reg.onupdatefound = () => {
-                const installingWorker = reg.installing;
-                if (installingWorker) {
-                  installingWorker.onstatechange = () => {
-                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                      console.log('🔄 New update available! Please refresh.');
-                    }
-                  };
-                }
-              };
-            })
-            .catch(err => {
-              // إذا كان الخطأ متعلق بـ Origin في بيئة تطوير معينة، نقوم بتجاهله أو تسجيله بهدوء
-              if (err.message.includes('same-origin')) {
-                console.warn('⚠️ Service Worker skipped: Same-origin policy (Local environment).');
-              } else {
-                console.error('❌ SW Registration Failed:', err);
-              }
-            });
+          navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('✅ PWA Active'))
+            .catch(err => console.log('❌ PWA Error', err));
         });
       }
     </script>

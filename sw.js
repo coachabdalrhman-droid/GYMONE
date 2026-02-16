@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'gym-jalaa-pro-v6';
+const CACHE_NAME = 'gym-jalaa-pro-v7'; // إصدار جديد
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -10,9 +10,7 @@ const ASSETS_TO_CACHE = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
   );
   self.skipWaiting();
 });
@@ -30,19 +28,7 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // نحدث الكاش في الخلفية للاستخدام القادم
-        fetch(event.request).then(response => {
-           if (response && response.status === 200) {
-             caches.open(CACHE_NAME).then(cache => cache.put(event.request, response));
-           }
-        }).catch(() => {});
-        return cachedResponse;
-      }
-      return fetch(event.request);
-    })
+    caches.match(event.request).then((cached) => cached || fetch(event.request))
   );
 });
