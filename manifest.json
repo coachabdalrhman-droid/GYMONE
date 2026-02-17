@@ -1,8 +1,8 @@
 
 {
-  "short_name": "جيم الجلاء",
-  "name": "نظام إدارة جيم الجلاء الرياضي",
-  "description": "نظام احترافي لإدارة اشتراكات وأعضاء جيم الجلاء الرياضي - غزة",
+  "short_name": "الجلاء برو",
+  "name": "نظام الجلاء برو لإدارة الصالات الرياضية",
+  "description": "حل مكتبي متكامل لإدارة المشتركين والعمليات المالية لصالات الجيم",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2964/2964514.png",
@@ -15,21 +15,14 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    },
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/2964/2964514.png",
-      "sizes": "1024x1024",
-      "type": "image/png",
-      "purpose": "any"
     }
   ],
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#4338ca",
-  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "any",
   "scope": "./",
   "lang": "ar-SA",
-  "dir": "rtl",
-  "categories": ["fitness", "business"]
+  "dir": "rtl"
 }

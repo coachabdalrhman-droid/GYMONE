@@ -1,264 +1,166 @@
 
 import React, { useState, useMemo } from 'react';
 import { Member, Plan, SubscriptionStatus } from '../types';
-import { exportToCSV } from '../utils/exportUtils';
+import { exportToExcel } from '../utils/exportUtils';
 
 interface MemberTableProps {
   members: Member[];
   plans: Plan[];
+  searchTerm: string;
   onDelete: (id: string) => void;
   onEdit: (member: Member) => void;
+  onView: (member: Member) => void;
 }
 
-const MemberTable: React.FC<MemberTableProps> = ({ members, plans, onDelete, onEdit }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+const MemberTable: React.FC<MemberTableProps> = ({ members, plans, searchTerm, onDelete, onEdit, onView }) => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [planFilter, setPlanFilter] = useState<string>('all');
-  const [debtFilter, setDebtFilter] = useState<string>('all');
-  const [isFilterVisible, setIsFilterVisible] = useState(false);
 
   const filteredMembers = useMemo(() => {
     return members.filter(m => {
       const matchesSearch = m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.phone.includes(searchTerm);
       const matchesStatus = statusFilter === 'all' || m.status === statusFilter;
-      const matchesPlan = planFilter === 'all' || m.planId === planFilter;
-      const matchesDebt = debtFilter === 'all' || 
-                         (debtFilter === 'has_debt' ? m.remainingAmount > 0 : m.remainingAmount === 0);
-      
-      return matchesSearch && matchesStatus && matchesPlan && matchesDebt;
+      return matchesSearch && matchesStatus;
     });
-  }, [members, searchTerm, statusFilter, planFilter, debtFilter]);
+  }, [members, searchTerm, statusFilter]);
 
   const handlePrintReceipt = (member: Member) => {
     const plan = plans.find(p => p.id === member.planId);
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
-    const content = `
-      <div dir="rtl" style="font-family: Arial; padding: 20px; text-align: right;">
-        <h2>جيم الجلاء الرياضي</h2>
-        <p>الاسم: ${member.name}</p>
-        <p>الاشتراك: ${plan?.name}</p>
-        <p>تاريخ الانتهاء: ${member.endDate}</p>
-        <p>المبلغ: ${member.totalPaid} شيكل</p>
-        <p>المتبقي: ${member.remainingAmount} شيكل</p>
-        <script>window.print(); window.close();</script>
+    printWindow.document.write(`
+      <div dir="rtl" style="font-family: 'Almarai', sans-serif; padding: 40px; text-align: right; max-width: 500px; margin: auto; border: 1px solid #e2e8f0; border-radius: 20px;">
+        <div style="display: flex; justify-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 30px;">
+           <div>
+              <h1 style="color: #4f46e1; margin: 0; font-size: 20px; font-weight: 800;">جيم الجلاء الرياضي</h1>
+              <p style="color: #64748b; font-size: 10px; margin-top: 4px;">رقم السند: #${member.id.slice(-6)}</p>
+           </div>
+           <div style="font-size: 24px;">⚡</div>
+        </div>
+        
+        <div style="margin-bottom: 25px; font-size: 13px;">
+          <p style="margin: 6px 0;"><strong>الاسم:</strong> ${member.name}</p>
+          <p style="margin: 6px 0;"><strong>نوع الباقة:</strong> ${plan?.name}</p>
+          <p style="margin: 6px 0;"><strong>تاريخ الانتهاء:</strong> ${member.endDate}</p>
+        </div>
+
+        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #f1f5f9;">
+           <p style="margin: 0; font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">المبلغ المحصل</p>
+           <p style="margin: 6px 0 0 0; font-size: 28px; font-weight: 800; color: #1e293b;">${member.totalPaid.toLocaleString('en-US')} ₪</p>
+           ${member.remainingAmount > 0 ? `<p style="margin: 6px 0 0 0; font-size: 12px; color: #ef4444; font-weight: 800;">المبلغ المتبقي: ${member.remainingAmount.toLocaleString('en-US')} ₪</p>` : '<p style="margin: 6px 0 0 0; font-size: 10px; color: #10b981; font-weight: 800;">خالص القيمة ✓</p>'}
+        </div>
+
+        <p style="text-align: center; font-size: 9px; color: #94a3b8; margin-top: 30px;">تم الإصدار بواسطة نظام الجلاء برو المكتبي</p>
       </div>
-    `;
-    printWindow.document.write(content);
+      <script>window.print(); setTimeout(() => window.close(), 500);</script>
+    `);
     printWindow.document.close();
   };
 
-  const getStatusStyle = (status: SubscriptionStatus) => {
-    switch (status) {
-      case SubscriptionStatus.ACTIVE: return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-      case SubscriptionStatus.EXPIRED: return 'bg-red-100 text-red-700 border-red-200';
-      case SubscriptionStatus.EXPIRING_SOON: return 'bg-amber-100 text-amber-700 border-amber-200';
-      default: return 'bg-slate-100 text-slate-700 border-slate-200';
-    }
-  };
-
-  const resetFilters = () => {
-    setSearchTerm('');
-    setStatusFilter('all');
-    setPlanFilter('all');
-    setDebtFilter('all');
-  };
-
   return (
-    <div className="space-y-4">
-      {/* Search & Actions Area */}
-      <div className="bg-white p-4 rounded-3xl shadow-sm border border-slate-200 flex flex-col gap-4">
-        <div className="flex flex-col md:flex-row gap-3 justify-between items-center">
-          <div className="relative w-full md:w-96">
-            <input 
-              type="text" 
-              placeholder="بحث بالاسم أو الهاتف..." 
-              className="w-full pl-4 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm font-bold transition-all" 
-              value={searchTerm} 
-              onChange={(e) => setSearchTerm(e.target.value)} 
-            />
-            <span className="absolute left-3 top-3.5 text-slate-400">🔍</span>
-          </div>
-          
-          <div className="flex gap-2 w-full md:w-auto">
-            <button 
-              onClick={() => setIsFilterVisible(!isFilterVisible)}
-              className={`flex-1 md:flex-none px-5 py-3 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 border ${isFilterVisible ? 'bg-indigo-50 border-indigo-200 text-indigo-600' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-            >
-              <span>⚙️</span> تصفية متقدمة
-            </button>
-            <button 
-              onClick={() => exportToCSV(members, plans)} 
-              className="flex-1 md:flex-none px-5 py-3 bg-emerald-600 text-white rounded-2xl font-bold text-sm shadow-md hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
-            >
-              <span>📥</span> تصدير Excel
-            </button>
+    <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Dynamic Filter Section */}
+      <div className="flex items-center justify-between bg-white px-6 py-4 rounded-xl border border-slate-100 shadow-sm">
+        <div className="flex items-center gap-5">
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">تصفية العرض</span>
+          <div className="flex gap-1.5">
+            <FilterChip active={statusFilter === 'all'} label="الكل" onClick={() => setStatusFilter('all')} />
+            <FilterChip active={statusFilter === SubscriptionStatus.ACTIVE} label="نشط" onClick={() => setStatusFilter(SubscriptionStatus.ACTIVE)} />
+            <FilterChip active={statusFilter === SubscriptionStatus.EXPIRED} label="منتهي" onClick={() => setStatusFilter(SubscriptionStatus.EXPIRED)} />
+            <FilterChip active={statusFilter === SubscriptionStatus.EXPIRING_SOON} label="قريب" onClick={() => setStatusFilter(SubscriptionStatus.EXPIRING_SOON)} />
           </div>
         </div>
-
-        {/* Advanced Filters Panel */}
-        {isFilterVisible && (
-          <div className="pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-4 gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-            <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase mb-1.5 mr-1">حالة الاشتراك</label>
-              <select 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="all">الكل</option>
-                <option value={SubscriptionStatus.ACTIVE}>نشط</option>
-                <option value={SubscriptionStatus.EXPIRED}>منتهي</option>
-                <option value={SubscriptionStatus.EXPIRING_SOON}>قريب الانتهاء</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase mb-1.5 mr-1">نوع الخطة</label>
-              <select 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500"
-                value={planFilter}
-                onChange={(e) => setPlanFilter(e.target.value)}
-              >
-                <option value="all">كل الخطط</option>
-                {plans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase mb-1.5 mr-1">حالة الدفع</label>
-              <select 
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500"
-                value={debtFilter}
-                onChange={(e) => setDebtFilter(e.target.value)}
-              >
-                <option value="all">الكل</option>
-                <option value="paid">خالص</option>
-                <option value="has_debt">عليه ديون</option>
-              </select>
-            </div>
-
-            <div className="flex items-end">
-              <button 
-                onClick={resetFilters}
-                className="w-full py-2.5 text-red-500 font-bold text-xs hover:bg-red-50 rounded-xl transition-colors border border-transparent hover:border-red-100"
-              >
-                إعادة ضبط
-              </button>
-            </div>
-          </div>
-        )}
+        <div className="text-[10px] font-bold text-slate-400 uppercase">النتائج المتاحة: {filteredMembers.length.toLocaleString('en-US')}</div>
       </div>
 
-      {/* Results Count */}
-      <div className="px-2 text-[11px] font-bold text-slate-400 flex justify-between">
-        <span>نتائج البحث: {filteredMembers.length} مشترك</span>
-        { (statusFilter !== 'all' || planFilter !== 'all' || debtFilter !== 'all') && (
-          <span className="text-indigo-500">تم تطبيق الفلاتر</span>
-        ) }
-      </div>
-
-      {/* Desktop Table */}
-      <div className="hidden md:block bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
-        <table className="w-full text-right">
-          <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-black text-slate-500 uppercase tracking-widest">
-            <tr>
-              <th className="px-6 py-5">الاسم</th>
-              <th className="px-6 py-5">الهاتف</th>
-              <th className="px-6 py-5">تاريخ الانتهاء</th>
-              <th className="px-6 py-5">الحالة</th>
-              <th className="px-6 py-5 text-center">الإجراءات</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {filteredMembers.length > 0 ? filteredMembers.map((m) => (
-              <tr key={m.id} className="hover:bg-slate-50/80 transition-colors group">
-                <td className="px-6 py-5 font-black text-slate-800">{m.name}</td>
-                <td className="px-6 py-5 text-slate-500 text-sm font-bold tracking-tight">{m.phone}</td>
-                <td className="px-6 py-5 text-indigo-600 text-sm font-black">{m.endDate}</td>
-                <td className="px-6 py-5">
-                  <span className={`px-4 py-1.5 rounded-full text-[10px] font-black border ${getStatusStyle(m.status)}`}>
-                    {m.status}
-                  </span>
-                </td>
-                <td className="px-6 py-5 flex justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <ActionButton icon="🖨️" onClick={() => handlePrintReceipt(m)} color="text-slate-600" title="طباعة وصل" />
-                  <ActionButton icon="✏️" onClick={() => onEdit(m)} color="text-indigo-600" title="تعديل" />
-                  <ActionButton icon="🗑️" onClick={() => onDelete(m.id)} color="text-red-500" title="حذف" />
-                </td>
+      {/* Main Data Surface */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-right">
+            <thead>
+              <tr className="bg-slate-50/80 border-b border-slate-100">
+                <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">المشترك</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">الاشتراك</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">تاريخ الانتهاء</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">المستحقات</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">الحالة</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-left">أدوات</th>
               </tr>
-            )) : (
-              <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-slate-400 font-bold">لا يوجد نتائج تطابق بحثك</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Mobile List - Cards */}
-      <div className="md:hidden space-y-4 pb-6">
-        {filteredMembers.length > 0 ? filteredMembers.map((m) => {
-          const plan = plans.find(p => p.id === m.planId);
-          return (
-            <div key={m.id} className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-200 space-y-5 active:scale-[0.98] transition-all">
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-indigo-50 rounded-[1.25rem] flex items-center justify-center text-indigo-600 text-xl font-black shadow-inner">
-                    {m.name.charAt(0)}
-                  </div>
-                  <div>
-                    <h4 className="font-black text-slate-900 text-lg leading-tight">{m.name}</h4>
-                    <p className="text-[11px] text-slate-400 font-bold mt-1 tracking-wide">{m.phone}</p>
-                  </div>
-                </div>
-                <span className={`px-4 py-1.5 rounded-full text-[10px] font-black border ${getStatusStyle(m.status)}`}>
-                  {m.status}
-                </span>
-              </div>
-              
-              <div className="bg-slate-50/50 rounded-[1.75rem] p-5 space-y-3 border border-slate-100">
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400 font-bold uppercase tracking-widest">نوع الاشتراك</span>
-                  <span className="text-slate-700 font-black">{plan?.name}</span>
-                </div>
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="text-slate-400 font-bold uppercase tracking-widest">تاريخ الانتهاء</span>
-                  <span className="text-indigo-600 font-black">{m.endDate}</span>
-                </div>
-                <div className="flex justify-between items-center text-xs pt-3 border-t border-slate-200">
-                  <span className="text-slate-400 font-bold uppercase tracking-widest">الحالة المالية</span>
-                  <span className={m.remainingAmount > 0 ? "text-red-600 font-black" : "text-emerald-600 font-black"}>
-                    {m.remainingAmount > 0 ? `متبقي ${m.remainingAmount} ₪` : 'تم الدفع بالكامل'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button onClick={() => onEdit(m)} className="flex-1 bg-indigo-600 text-white py-4 rounded-[1.25rem] text-sm font-black shadow-lg shadow-indigo-100 active:bg-indigo-700 transition-colors">تعديل البيانات</button>
-                <button onClick={() => handlePrintReceipt(m)} className="w-16 bg-slate-100 text-slate-600 rounded-[1.25rem] text-2xl flex items-center justify-center active:bg-slate-200 transition-colors">🖨️</button>
-                <button onClick={() => onDelete(m.id)} className="w-16 bg-red-50 text-red-500 rounded-[1.25rem] text-2xl flex items-center justify-center active:bg-red-100 transition-colors">🗑️</button>
-              </div>
-            </div>
-          );
-        }) : (
-          <div className="text-center py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200">
-             <div className="text-4xl mb-4">🔍</div>
-             <p className="font-bold text-slate-400">لا يوجد مشتركين بهذه المواصفات</p>
-          </div>
-        )}
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {filteredMembers.map(member => (
+                <tr key={member.id} className="hover:bg-slate-50/50 transition-colors group">
+                  <td className="px-6 py-5">
+                    <div 
+                      className="flex items-center gap-3 cursor-pointer"
+                      onClick={() => onView(member)}
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center font-extrabold text-slate-500 text-sm group-hover:bg-indigo-600 group-hover:text-white transition-all">{member.name.charAt(0)}</div>
+                      <div>
+                        <p className="font-extrabold text-slate-900 text-xs hover:text-indigo-600 transition-colors">{member.name}</p>
+                        <p className="text-[10px] text-slate-400 font-bold">{member.phone}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5 text-xs font-bold text-slate-600">
+                    {plans.find(p => p.id === member.planId)?.name}
+                  </td>
+                  <td className="px-6 py-5 text-xs font-extrabold text-slate-500">
+                    {member.endDate}
+                  </td>
+                  <td className="px-6 py-5 text-center">
+                    <span className={`text-xs font-black ${member.remainingAmount > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                      {member.remainingAmount.toLocaleString('en-US')} ₪
+                    </span>
+                  </td>
+                  <td className="px-6 py-5">
+                    <StatusBadge status={member.status} />
+                  </td>
+                  <td className="px-6 py-5 text-left">
+                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ActionBtn onClick={() => onView(member)} icon={<path d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />} />
+                      <ActionBtn onClick={() => onEdit(member)} icon={<path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />} />
+                      <ActionBtn onClick={() => handlePrintReceipt(member)} icon={<path d="M6.75 3v2.25h10.5V3m-10.5 13.5h10.5M6.75 3a2.25 2.25 0 0 0-2.25 2.25V18a2.25 2.25 0 0 0 2.25 2.25h10.5A2.25 2.25 0 0 0 19.5 18V5.25a2.25 2.25 0 0 0-2.25-2.25" />} />
+                      <ActionBtn onClick={() => onDelete(member.id)} variant="danger" icon={<path d="M14.74 9l-.34 9m-4.74 0L9.26 9m9.96-3.24c.06.37.08.75.08 1.14v.13c0 1.1-.9 2-2 2H6.5c-1.1 0-2-.9-2-2v-.13c0-.39.02-.77.08-1.14m12.72 0A49.694 49.694 0 0 0 18 4.5V3c0-1.105-.895-2-2-2H8c-1.105 0-2 .895-2 2v1.5c0 .16-.003.31-.01.46" />} />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
 };
 
-const ActionButton = ({ icon, onClick, color, title }: { icon: string; onClick: () => void; color: string; title: string }) => (
+const FilterChip = ({ active, label, onClick }: any) => (
   <button 
-    onClick={onClick} 
-    title={title}
-    className={`p-2.5 rounded-xl hover:bg-white border border-transparent hover:border-slate-200 shadow-sm hover:shadow transition-all ${color}`}
+    onClick={onClick}
+    className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all border ${active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300'}`}
   >
-    <span className="text-lg">{icon}</span>
+    {label}
+  </button>
+);
+
+const StatusBadge = ({ status }: { status: SubscriptionStatus }) => {
+  const cfg: any = {
+    [SubscriptionStatus.ACTIVE]: "bg-emerald-50 text-emerald-600",
+    [SubscriptionStatus.EXPIRED]: "bg-rose-50 text-rose-600",
+    [SubscriptionStatus.EXPIRING_SOON]: "bg-amber-50 text-amber-600",
+  };
+  return (
+    <span className={`px-2.5 py-1 rounded text-[9px] font-black uppercase tracking-tight ${cfg[status] || 'bg-slate-50 text-slate-500'}`}>
+      {status}
+    </span>
+  );
+};
+
+const ActionBtn = ({ onClick, icon, variant = 'default' }: any) => (
+  <button 
+    onClick={onClick}
+    className={`p-2 rounded-lg transition-all ${variant === 'danger' ? 'text-rose-400 hover:bg-rose-50 hover:text-rose-600' : 'text-slate-400 hover:bg-slate-100 hover:text-indigo-600'}`}
+  >
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>{icon}</svg>
   </button>
 );
 

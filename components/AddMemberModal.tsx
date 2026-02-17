@@ -83,7 +83,7 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, onSave
                 <label className="block text-xs font-bold text-slate-500 mb-1.5">نوع الاشتراك</label>
                 <select className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm focus:ring-2 focus:ring-indigo-500"
                   value={formData.planId} onChange={e => setFormData({ ...formData, planId: e.target.value })}>
-                  {plans.map(p => <option key={p.id} value={p.id}>{p.name} ({p.price} شيكل)</option>)}
+                  {plans.map(p => <option key={p.id} value={p.id}>{p.name} ({p.price.toLocaleString('en-US')} شيكل)</option>)}
                 </select>
               </div>
               <Input label="تاريخ البدء" type="date" value={formData.startDate} onChange={v => setFormData({ ...formData, startDate: v })} />
@@ -105,9 +105,9 @@ const AddMemberModal: React.FC<AddMemberModalProps> = ({ isOpen, onClose, onSave
             </div>
             {selectedPlan && (
               <div className="flex justify-between text-[11px] font-black px-1 pt-2 border-t border-slate-200">
-                <span className="text-slate-400">سعر الاشتراك: {selectedPlan.price} شيكل</span>
+                <span className="text-slate-400">سعر الاشتراك: {selectedPlan.price.toLocaleString('en-US')} شيكل</span>
                 <span className={Math.max(0, selectedPlan.price - (Number(formData.totalPaid) || 0)) > 0 ? 'text-red-500' : 'text-emerald-500'}>
-                  المتبقي: {Math.max(0, selectedPlan.price - (Number(formData.totalPaid) || 0))} شيكل
+                  المتبقي: {Math.max(0, selectedPlan.price - (Number(formData.totalPaid) || 0)).toLocaleString('en-US')} شيكل
                 </span>
               </div>
             )}

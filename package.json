@@ -1,19 +1,36 @@
 
 {
-  "name": "gym-alaa-management",
-  "private": true,
+  "name": "gym-jalaa-pro",
+  "productName": "جيم الجلاء برو",
   "version": "1.0.0",
+  "description": "نظام إدارة اشتراكات جيم الجلاء الرياضي",
+  "main": "electron-main.js",
   "type": "module",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win portable"
+  },
   "dependencies": {
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "recharts": "2.15.0",
-    "@google/genai": "1.3.0",
     "xlsx": "0.18.5"
   },
   "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3",
     "@types/react": "19.0.0",
     "@types/react-dom": "19.0.0",
     "typescript": "5.7.3"
+  },
+  "build": {
+    "appId": "com.jalaa.gym.pro",
+    "win": {
+      "target": "portable",
+      "icon": "https://cdn-icons-png.flaticon.com/512/2964/2964514.png"
+    },
+    "directories": {
+      "output": "dist-exe"
+    }
   }
 }

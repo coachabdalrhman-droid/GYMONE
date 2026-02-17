@@ -20,7 +20,7 @@ const Reminders: React.FC<RemindersProps> = ({ members, plans }) => {
     let message = "";
     
     if (filter === 'debts') {
-      message = `مرحباً كابتن ${member.name}، نود تذكيرك بأن لديك مبلغ متبقي (${member.remainingAmount} شيكل) من اشتراك ${plan?.name} الذي ينتهي بتاريخ ${member.endDate}. ننتظرك في جيم الجلاء!`;
+      message = `مرحباً كابتن ${member.name}، نود تذكيرك بأن لديك مبلغ متبقي (${member.remainingAmount.toLocaleString('en-US')} شيكل) من اشتراك ${plan?.name} الذي ينتهي بتاريخ ${member.endDate}. ننتظرك في جيم الجلاء!`;
     } else {
       message = `مرحباً كابتن ${member.name}، نود تذكيرك بأن اشتراكك في جيم الجلاء (${plan?.name}) ${member.status === SubscriptionStatus.EXPIRED ? 'قد انتهى' : 'سينتهي'} بتاريخ ${member.endDate}. يسعدنا تجديد اشتراكك في أي وقت!`;
     }
@@ -64,7 +64,7 @@ const TabButton = ({ active, onClick, label, count }: any) => (
     className={`px-6 py-3.5 rounded-xl text-xs font-black transition-all flex items-center gap-3 whitespace-nowrap ${active ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-slate-500 hover:bg-slate-50'}`}
   >
     {label}
-    <span className={`px-2 py-0.5 rounded-full text-[10px] ${active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}`}>{count}</span>
+    <span className={`px-2 py-0.5 rounded-full text-[10px] ${active ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}`}>{count.toLocaleString('en-US')}</span>
   </button>
 );
 
@@ -91,7 +91,7 @@ const ReminderCard = ({ member, plan, type, onWhatsApp }: any) => (
        {type === 'debts' && (
          <div className="flex justify-between text-sm pt-2 border-t border-slate-200">
             <span className="text-slate-500 font-bold">المبلغ المطلوب:</span>
-            <span className="font-black text-red-600 text-lg">{member.remainingAmount} ₪</span>
+            <span className="font-black text-red-600 text-lg">{member.remainingAmount.toLocaleString('en-US')} ₪</span>
          </div>
        )}
     </div>
