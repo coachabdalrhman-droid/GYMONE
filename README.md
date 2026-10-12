@@ -1,20 +1,34 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# جيم الجلاء برو — تطبيق Windows
 
-# Run and deploy your AI Studio app
+تطبيق لإدارة المشتركين والاشتراكات في صالات الرياضة، مبني باستخدام React وVite وElectron.
 
-This contains everything you need to run your app locally.
+## المتطلبات
+- Node.js 20 أو أحدث
+- npm
 
-View your app in AI Studio: https://ai.studio/apps/drive/1PbyDBBzJPYQIg5Q3GhSb3PaUMPAs_Lnz
+## التطوير والبناء
+```bash
+npm install
+npm run dev
+```
 
-## Run Locally
+لبناء ملفات الواجهة:
+```bash
+npm run build
+```
 
-**Prerequisites:**  Node.js
+لبناء مثبت Windows x64 بصيغة EXE:
+```bash
+npm run dist:win
+```
 
+سيتم وضع الملفات الناتجة في `dist-exe/`.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## التشغيل دون إنترنت
+يتم تجميع React وRecharts وTailwind ضمن ملفات التطبيق محليًا. وظائف الواجهة والتخزين المحلي المتاحة في المشروع مصممة للعمل دون خادم ويب. لا تزال أي ميزة تعتمد على API خارجي أو خدمة سحابية بحاجة إلى اتصال بالإنترنت.
+
+## البيانات
+الإصدار الحالي يستخدم `localStorage` لتخزين بيانات المشتركين على ملف المستخدم المحلي للتطبيق. صدّر نسخة احتياطية من البيانات بانتظام، ولا تحذف بيانات التطبيق قبل أخذ نسخة منها.
+
+## بناء آلي
+عند تشغيل GitHub Actions على فرع `desktop-offline`، سيجري بناء مثبت Windows ورفعه كـ workflow artifact. لا يتم نشر إصدار تلقائيًا إلى صفحة Releases.
